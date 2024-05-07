@@ -4,7 +4,6 @@
 
 from board import *
 
-
 class OthelloBoard(Board):
     def __init__(self, rows, cols, p1, p2):
         Board.__init__(self, rows, cols)
@@ -86,8 +85,6 @@ class OthelloBoard(Board):
             (next_col, next_row) = self.set_coords_in_direction(col, row, d)
             return 1+ self.flip_pieces_helper(next_col, next_row, symbol, d)
 
-
-
     def flip_pieces(self, col, row, symbol):
         pieces_flipped = 0
         if not self.is_in_bounds(col, row):
@@ -100,12 +97,20 @@ class OthelloBoard(Board):
 
         return pieces_flipped
 
-    def has_legal_moves_remaining(self, symbol):
-        for c in range (0, self.cols):
-            for r in range (0, self.rows):
+    def get_legal_moves_remaining(self, symbol):
+        moves = []
+
+        for c in range(0, self.cols):
+            for r in range(0, self.rows):
                 if self.is_cell_empty(c, r) and self.is_legal_move(c, r, symbol):
-                    return True
-        return False
+                    moves.append((c, r))
+
+        return moves
+                    
+    def has_legal_moves_remaining(self, symbol):
+        legal_moves = self.get_legal_moves_remaining(symbol)
+
+        return len(legal_moves) > 0
 
     def count_score(self, symbol):
         score = 0
@@ -118,7 +123,3 @@ class OthelloBoard(Board):
     def play_move(self, col, row, symbol):
         self.set_cell(col, row, symbol)
         self.flip_pieces(col, row, symbol)
-
-
-
-
