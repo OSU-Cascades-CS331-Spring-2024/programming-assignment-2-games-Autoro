@@ -2,16 +2,17 @@
     Defines game driver class, used to play a game of Othello.
 '''
 import sys
+import argparse
 from players import *
 from othello_board import OthelloBoard
 
 
 class GameDriver:
-    def __init__(self, p1type, p2type, num_rows, num_cols):
+    def __init__(self, p1type, p2type, num_rows, num_cols, max_depth):
         if p1type.lower() in "human":
             self.p1 = HumanPlayer('X')
         elif p1type.lower() in "minimax" or p1type in "ai":
-            self.p1 = MinimaxPlayer('X')
+            self.p1 = MinimaxPlayer('X', max_depth)
         else:
             print("Invalid player 1 type!")
             exit(-1)
@@ -19,7 +20,7 @@ class GameDriver:
         if p2type.lower() in "human":
             self.p2 = HumanPlayer('O')
         elif p2type.lower() in "minimax" or p1type in "ai":
-            self.p2 = MinimaxPlayer('O')
+            self.p2 = MinimaxPlayer('O', max_depth)
         else:
             print("Invalid player 2 type!")
             exit(-1)
@@ -80,8 +81,13 @@ class GameDriver:
 
 
 if __name__ == "__main__":
-    if(len(sys.argv)) != 3:
-        print("Usage: python3 game_driver.py <player1 type> <player2 type>")
-        exit(1)
-    game = GameDriver(sys.argv[1], sys.argv[2], 4, 4)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("player1", choices=["human", "minimax"], help="The type of player to use for player 1.")
+    parser.add_argument("player2", choices=["human", "minimax"], help="The type of player to use for player 2.")
+    parser.add_argument("-s", "--size", type=int, default=4, help="The number of rows and columns of the Othello board.")
+    parser.add_argument("-d", "--maxdepth", type=int, default=5, help="The maximum depth the MinimaxPlayer can simulate to.")
+
+    args = parser.parse_args()
+
+    game = GameDriver(args.player1, args.player2, args.size, args.size, args.maxdepth)
     game.run()

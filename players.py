@@ -44,12 +44,14 @@ class MinimaxPlayer(Player):
     Represents a player that uses the minimax algorithm to play Othello.
     """
 
-    def __init__(self, symbol):
+    def __init__(self, symbol, max_depth):
         Player.__init__(self, symbol)
         if symbol == 'X':
             self.oppSym = 'O'
         else:
             self.oppSym = 'X'
+
+        self.max_depth = max_depth
     
     def get_next_game_state(self, board : OthelloBoard, move : tuple[int, int], symbol : str) -> OthelloBoard:
         """
@@ -137,7 +139,7 @@ class MinimaxPlayer(Player):
             next_board = board.clone_of_board()
             next_board.play_move(move[0], move[1], self.symbol)
 
-            value = self.minimax(next_board, 5, MinimaxTurn.MIN, 0)
+            value = self.minimax(next_board, self.max_depth, MinimaxTurn.MIN, 0)
 
             if value > best_value:
                 best_move = move
