@@ -3,6 +3,7 @@
 '''
 
 import math
+import time
 from enum import Enum
 from othello_board import OthelloBoard
 
@@ -44,7 +45,7 @@ class MinimaxPlayer(Player):
     Represents a player that uses the minimax algorithm to play Othello.
     """
 
-    def __init__(self, symbol, max_depth):
+    def __init__(self, symbol, max_depth, max_time):
         Player.__init__(self, symbol)
         if symbol == 'X':
             self.oppSym = 'O'
@@ -52,7 +53,50 @@ class MinimaxPlayer(Player):
             self.oppSym = 'X'
 
         self.max_depth = max_depth
+        self.max_time = max_time
+        self.start_time = 0
+        self.run_times = []
     
+    def _start_turn(self) -> None:
+        """
+        Sets the start time for the current turn.
+        """
+
+        self.start_time = time.perf_counter()
+
+    def _end_turn(self) -> None:
+        """
+        Ends the current turn and prints the elapsed time.
+        """
+        
+        elapsed_time = time.perf_counter() - self.start_time
+        self.run_times.append(elapsed_time)
+
+        print(f"MinimaxPlayer took {elapsed_time:.4f}s")
+
+    def get_average_run_time(self) -> float:
+        """
+        Gets the average time taken per turn.
+
+        Returns:
+            float: The average time taken per turn.
+        """
+
+        if len(self.run_times) == 0:
+            return 0
+        
+        return sum(self.run_times) / len(self.run_times)
+        
+    def _time_exceeded(self) -> bool:
+        """
+        Determines whether or not the current turn has lasted longer than the set time limit.
+
+        Returns:
+            bool: Whether or not the time limit has been exceeded.
+        """
+        
+        return time.perf_counter() - self.start_time >= self.max_time
+
     def get_next_game_state(self, board : OthelloBoard, move : tuple[int, int], symbol : str) -> OthelloBoard:
         """
         Creates a copy of a game board with the results of a move for a player applied.
@@ -98,7 +142,7 @@ class MinimaxPlayer(Player):
             int: The optimal score that was found through simulation.
         """
 
-        if depth == 0:
+        if depth == 0 or self._time_exceeded():
             return self.get_score(board)
         
         current_symbol = self.symbol if turn == MinimaxTurn.MAX else self.oppSym
@@ -132,6 +176,8 @@ class MinimaxPlayer(Player):
             tuple[int, int]: The move the player decided to make.
         """
 
+        self._start_turn()
+
         best_move = None
         best_value = -math.inf
 
@@ -144,5 +190,7 @@ class MinimaxPlayer(Player):
             if value > best_value:
                 best_move = move
                 best_value = value
+        
+        self._end_turn()
 
         return best_move[0], best_move[1]

@@ -8,11 +8,11 @@ from othello_board import OthelloBoard
 
 
 class GameDriver:
-    def __init__(self, p1type, p2type, num_rows, num_cols, max_depth):
+    def __init__(self, p1type, p2type, num_rows, num_cols, max_depth, max_time):
         if p1type.lower() in "human":
             self.p1 = HumanPlayer('X')
         elif p1type.lower() in "minimax" or p1type in "ai":
-            self.p1 = MinimaxPlayer('X', max_depth)
+            self.p1 = MinimaxPlayer('X', max_depth, max_time)
         else:
             print("Invalid player 1 type!")
             exit(-1)
@@ -20,7 +20,7 @@ class GameDriver:
         if p2type.lower() in "human":
             self.p2 = HumanPlayer('O')
         elif p2type.lower() in "minimax" or p1type in "ai":
-            self.p2 = MinimaxPlayer('O', max_depth)
+            self.p2 = MinimaxPlayer('O', max_depth, max_time)
         else:
             print("Invalid player 2 type!")
             exit(-1)
@@ -79,6 +79,14 @@ class GameDriver:
         else:
             print("Player 2 Wins!")
 
+        if isinstance(self.p1, MinimaxPlayer) or isinstance(self.p2, MinimaxPlayer):
+            print()
+        
+            if isinstance(self.p1, MinimaxPlayer):
+                print(f"Player 1 minimax average run time: {self.p1.get_average_run_time():.4f}s")
+
+            if isinstance(self.p1, MinimaxPlayer):
+                print(f"Player 2 minimax average run time: {self.p2.get_average_run_time():.4f}s")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -86,8 +94,9 @@ if __name__ == "__main__":
     parser.add_argument("player2", choices=["human", "minimax"], help="The type of player to use for player 2.")
     parser.add_argument("-s", "--size", type=int, default=4, help="The number of rows and columns of the Othello board.")
     parser.add_argument("-d", "--maxdepth", type=int, default=5, help="The maximum depth the MinimaxPlayer can simulate to.")
+    parser.add_argument("-t", "--maxtime", type=int, default=10, help="The maximum time in seconds the MinimaxPlayer can simulate for.")
 
     args = parser.parse_args()
 
-    game = GameDriver(args.player1, args.player2, args.size, args.size, args.maxdepth)
+    game = GameDriver(args.player1, args.player2, args.size, args.size, args.maxdepth, args.maxtime)
     game.run()
