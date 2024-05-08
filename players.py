@@ -3,6 +3,7 @@
 '''
 
 import math
+from enum import Enum
 from othello_board import OthelloBoard
 
 class Player:
@@ -30,7 +31,19 @@ class HumanPlayer(Player):
         row = int(input("Enter row:"))
         return col, row
 
+class MinimaxTurn(Enum):
+    """
+    Represents the current turn for the minimax algorithm.
+    """
+
+    MIN = 0
+    MAX = 1
+
 class MinimaxPlayer(Player):
+    """
+    Represents a player that uses the minimax algorithm to play Othello.
+    """
+
     def __init__(self, symbol):
         Player.__init__(self, symbol)
         if symbol == 'X':
@@ -38,7 +51,7 @@ class MinimaxPlayer(Player):
         else:
             self.oppSym = 'X'
     
-    def get_new_board(self, board : OthelloBoard, move : tuple[int, int], symbol : str) -> OthelloBoard:
+    def get_next_game_state(self, board : OthelloBoard, move : tuple[int, int], symbol : str) -> OthelloBoard:
         """
         Creates a copy of a game board with the results of a move for a player applied.
 
@@ -68,72 +81,41 @@ class MinimaxPlayer(Player):
         """
 
         return board.count_score(self.symbol) - board.count_score(self.oppSym)
-
-    def min_value(self, board : OthelloBoard, depth : int, skipped_count : int) -> int:
-        """
-        Finds the minimum possible score for a given game board.
-
-        Args:
-            board (OthelloBoard): The game board to find the minimum score for.
-            depth (int): The remaining depth iterations that can be performed. Returns immediately if the value is 0.
-            skipped_count (int): The number of previously skipped turns. Returns if the skipped count is greater than 1,
-                                 and no more moves are left.
-        
-        Returns:
-            int: The minimized score of the given game board.
-        """
-                
-        if depth == 0:
-            return self.get_score(board)
-        
-        if not board.has_legal_moves_remaining(self.oppSym):
-            # If min is out of moves and max skipped their last turn, then return the score.
-            # Otherwise give max a turn with the current game board.
-            if skipped_count > 0:
-                return self.get_score(board)
-            else:
-                return self.max_value(board, depth, 1)
-        
-        value = math.inf
-
-        for move in board.get_legal_moves_remaining(self.oppSym):
-            new_board = self.get_new_board(board, move, self.oppSym)
-
-            value = min(value, self.max_value(new_board, depth - 1, 0))
-
-        return value
     
-    def max_value(self, board : OthelloBoard, depth : int, skipped_count : int) -> int:
+    def minimax(self, board : OthelloBoard, depth : int, turn : MinimaxTurn, last_turn_skipped : bool) -> int:
         """
-        Finds the maximum possible score for a given game board.
+        Simulates playing out a given game board to find the best score that can be achieved.
 
         Args:
-            board (OthelloBoard): The game board to maximize for.
-            depth (int): The remaining depth iterations that can be performed. Returns immediately if the value is 0.
-            skipped_count (int): The number of previously skipped turns. Returns if the skipped count is greater than 1,
-                                 and no more moves are left.
-        
+            board (OthelloBoard): The current game board to play out.
+            depth (int): The maximum number of turns that will be played out before determining an optimal path.
+            turn (MinimaxTurn): The turn which simulation will start on.
+            last_turn_skipped (bool): Whether or not the last turn was skipped.
+
         Returns:
-            int: The maximized score of the given game board.
+            int: The optimal score that was found through simulation.
         """
 
         if depth == 0:
             return self.get_score(board)
         
-        if not board.has_legal_moves_remaining(self.symbol):
-            # If max is out of moves and min skipped their last turn, then return the score.
-            # Otherwise give min a turn with the current game board.
-            if skipped_count > 0:
+        current_symbol = self.symbol if turn == MinimaxTurn.MAX else self.oppSym
+        eval_function = max if turn == MinimaxTurn.MAX else min
+        value = -math.inf if turn == MinimaxTurn.MAX else math.inf
+        next_turn = MinimaxTurn.MIN if turn == MinimaxTurn.MAX else MinimaxTurn.MIN
+        
+        if not board.has_legal_moves_remaining(current_symbol):
+            # If the current player is out of moves and the last player skipped their turn, then
+            # return the score. Otherwise give the other player a turn with the current game board.
+            if last_turn_skipped:
                 return self.get_score(board)
             else:
-                return self.min_value(board, depth, 1)
+                return self.minimax(board, depth, next_turn, 1)
         
-        value = -math.inf
+        for move in board.get_legal_moves_remaining(current_symbol):
+            next_board = self.get_next_game_state(board, move, current_symbol)
 
-        for move in board.get_legal_moves_remaining(self.symbol):
-            new_board = self.get_new_board(board, move, self.symbol)
-
-            value = max(value, self.min_value(new_board, depth - 1, 0))
+            value = eval_function(value, self.minimax(next_board, depth - 1, next_turn, 0))
 
         return value
 
@@ -152,10 +134,10 @@ class MinimaxPlayer(Player):
         best_value = -math.inf
 
         for move in board.get_legal_moves_remaining(self.symbol):
-            new_board = board.clone_of_board()
-            new_board.play_move(move[0], move[1], self.symbol)
+            next_board = board.clone_of_board()
+            next_board.play_move(move[0], move[1], self.symbol)
 
-            value = self.min_value(new_board, 5, 0)
+            value = self.minimax(next_board, 5, MinimaxTurn.MIN, 0)
 
             if value > best_value:
                 best_move = move
