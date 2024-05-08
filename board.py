@@ -76,14 +76,14 @@ class Board:
             return False
 
     def display(self):
-        string2 = '--' * self.cols
+        string2 = '  ' + '--' * self.cols
+        print(' ', *range(self.cols))
         print(string2)
-        for r in range(0,self.rows):
-            string = ''
+        for i, r in enumerate(range(0,self.rows)):
+            string = f"{i} "
             
             for c in range(0, self.cols):
                 string += self.grid[c][r] + ' '
             print(string)
         print(string2)
         
-
