@@ -85,7 +85,7 @@ class GameDriver:
             if isinstance(self.p1, MinimaxPlayer):
                 print(f"Player 1 minimax average run time: {self.p1.get_average_run_time():.4f}s")
 
-            if isinstance(self.p1, MinimaxPlayer):
+            if isinstance(self.p2, MinimaxPlayer):
                 print(f"Player 2 minimax average run time: {self.p2.get_average_run_time():.4f}s")
 
 if __name__ == "__main__":
